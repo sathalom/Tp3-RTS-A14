@@ -21,6 +21,7 @@ public class MusicPlayer {
 			
 			musicBuffer.openFromFile(Paths.get("./ressource/wc2intro.ogg"));
 			musicList[0] = musicBuffer;
+			musicBuffer = new Music();
 			
 		} catch (Exception e) {
 
