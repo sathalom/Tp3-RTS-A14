@@ -83,7 +83,7 @@ public class GameController implements GameEventHandler {
 		map.setTexture(gazon);
 		map.setTextureRect(new IntRect(0, 0, (int) (Game.MAP_SIZE * Tile.TILE_SIZE), (int) (Game.MAP_SIZE * Tile.TILE_SIZE)));
 
-		music.playMusic(1);
+		music.playMusic(2);
 		while (window.isOpen()) {
 
 			music.musicPlaylist();

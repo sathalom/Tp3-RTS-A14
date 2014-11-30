@@ -1,27 +1,38 @@
 package ca.csf.RTS.game.model.sound;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.nio.file.Paths;
 
 import org.jsfml.audio.*;
 import org.jsfml.audio.SoundSource.Status;
+import org.jsfml.system.Time;
 
 
 public class MusicPlayer {
 	
 	Music music = new Music();
-	Music[] musicList = new Music[10];
+	Music[] musicList = new Music[100];
+	
+	int playlistMax = 0;
+	int playlistPlayed = 0;
 	
 	public MusicPlayer(){
 		//Music list
 		try {
+			BufferedReader read = new BufferedReader(new FileReader(new File("./ressource/musiclist.txt")));
+			String line;
 			Music musicBuffer = new Music();
-			musicBuffer.openFromFile(Paths.get("./ressource/wc2all1.ogg"));
-			musicList[1] = musicBuffer;
-			musicBuffer = new Music();
 			
-			musicBuffer.openFromFile(Paths.get("./ressource/wc2intro.ogg"));
-			musicList[0] = musicBuffer;
-			musicBuffer = new Music();
+			while((line = read.readLine()) != null){
+				musicBuffer.openFromFile(Paths.get(line));
+				musicList[playlistMax] = musicBuffer;
+				musicBuffer = new Music();
+				playlistMax++;
+			}
+			
+			read.close();
 			
 		} catch (Exception e) {
 
@@ -34,6 +45,8 @@ public class MusicPlayer {
 	music = musicList[song];
 	// Change some parameters
 	music.setVolume(50);
+	music.setPlayingOffset(Time.getSeconds(120));
+	music.setLoop(false);
 	
 	// Play it
 	music.play();
@@ -41,13 +54,12 @@ public class MusicPlayer {
 	
 	public void musicPlaylist(){
 		if(music.getStatus() ==  Status.STOPPED){
-			int temp = 1;
-			if(temp > 1){
+			if(playlistPlayed >= playlistMax){
 				this.playMusic(0);
-				temp = 1;
+				playlistPlayed = 0;
 			} else {
-				this.playMusic(1);
-				temp++;
+				this.playMusic(playlistPlayed);
+				playlistPlayed++;
 			}
 		}
 	}
