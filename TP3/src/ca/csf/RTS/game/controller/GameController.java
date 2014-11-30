@@ -2,8 +2,6 @@ package ca.csf.RTS.game.controller;
 
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-
 import org.jsfml.graphics.Color;
 import org.jsfml.graphics.FloatRect;
 import org.jsfml.graphics.IntRect;
@@ -16,16 +14,16 @@ import org.jsfml.system.Vector2f;
 import org.jsfml.system.Vector2i;
 import org.jsfml.window.Keyboard;
 import org.jsfml.window.Keyboard.Key;
-import org.jsfml.window.Mouse.Button;
 import org.jsfml.window.Mouse;
+import org.jsfml.window.Mouse.Button;
 import org.jsfml.window.VideoMode;
 import org.jsfml.window.WindowStyle;
 import org.jsfml.window.event.Event;
 import org.jsfml.window.event.KeyEvent;
 
 import ca.csf.RTS.Menu.model.Menu;
-import ca.csf.RTS.entity.Entity;
 import ca.csf.RTS.eventHandler.GameEventHandler;
+import ca.csf.RTS.game.entity.GameEntity;
 import ca.csf.RTS.game.model.Game;
 import ca.csf.RTS.game.model.Tile;
 import ca.csf.RTS.game.model.sound.MusicPlayer;
@@ -51,6 +49,7 @@ public class GameController implements GameEventHandler {
 			gazon.loadFromFile(Paths.get("./ressource/gazon.jpg"));
 			gazon.setRepeated(true);
 			gazon.setSmooth(true);
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -62,7 +61,7 @@ public class GameController implements GameEventHandler {
 		RenderWindow window = new RenderWindow();
 		window.create(VideoMode.getDesktopMode(), Menu.TITLE, WindowStyle.FULLSCREEN);
 
-		window.setFramerateLimit(500);
+		window.setFramerateLimit(200);
 
 		// declare une nouvelle vue pour pouvoir la deplacer
 		View defaultView = (View) window.getDefaultView();
@@ -95,21 +94,20 @@ public class GameController implements GameEventHandler {
 				window.setView(guiView);
 				// draw the GUI
 				drawGUI(window);
-				// Display what was drawn
-				window.display();
 
 				window.setView(gameView);
 
-				// Fill the window with red
-				window.clear(Color.RED);
-
-				// dessine toutes les entitys
-				for (Entity entity : game.getAllEntity()) {
-					entity.draw(window);
-				}
-
 				window.draw(map);
+				
+				// dessine toutes les entitys
+				for (GameEntity gameEntity : game.getAllEntity()) {
+					gameEntity.draw(window);
+				}
+				
 				window.draw(selection);
+				
+				// Display what was drawn
+				window.display();
 
 				if (Keyboard.isKeyPressed(Key.D)) {
 					if (gameView.getCenter().x * 2 < Game.MAP_SIZE * Tile.TILE_SIZE) {
@@ -138,10 +136,11 @@ public class GameController implements GameEventHandler {
 				if (Mouse.isButtonPressed(Button.LEFT)) {
 					Vector2f mousePos = window.mapPixelToCoords(new Vector2i(Mouse.getPosition().x, Mouse.getPosition().y));
 
+					//pour empecher que la selection depasse de la vue
 					if (mousePos.x > gameView.getSize().x && mousePos.x > Game.MAP_SIZE * Tile.TILE_SIZE) {
 						mousePos = new Vector2f(mousePos.x - (gameView.getSize().x/2 - gameView.getCenter().x), mousePos.y);
 					}
-					if (mousePos.y > gameView.getSize().y || mousePos.y > Game.MAP_SIZE * Tile.TILE_SIZE) {
+					if (mousePos.y > gameView.getSize().y && mousePos.y > Game.MAP_SIZE * Tile.TILE_SIZE) {
 						mousePos = new Vector2f(mousePos.x, mousePos.y - (gameView.getSize().y/2 - gameView.getCenter().y));
 					}
 
@@ -185,11 +184,6 @@ public class GameController implements GameEventHandler {
 				break;
 			}
 		}
-	}
-
-	@Override
-	public void highlightSelected(ArrayList<Entity> entity) {
-
 	}
 
 	private void drawGUI(RenderWindow window) {

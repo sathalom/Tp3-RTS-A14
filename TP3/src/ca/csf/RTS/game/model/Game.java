@@ -5,10 +5,9 @@ import java.util.ArrayList;
 import org.jsfml.system.Vector2f;
 import org.jsfml.system.Vector2i;
 
-import ca.csf.RTS.entity.E_Entity;
-import ca.csf.RTS.entity.Entity;
-import ca.csf.RTS.entity.EntityFactory;
 import ca.csf.RTS.eventHandler.GameEventHandler;
+import ca.csf.RTS.game.entity.GameEntity;
+import ca.csf.RTS.game.entity.controllableEntity.human.FootMan;
 
 public class Game {
 
@@ -16,11 +15,16 @@ public class Game {
 
 	private ArrayList<GameEventHandler> gameEventHandler;
 	private Tile[][] map = new Tile[MAP_SIZE][MAP_SIZE];
-	private ArrayList<Entity> entityList;
+	private ArrayList<GameEntity> entityList;
+	private ArrayList<GameEntity> selectedList;
+	// temporaire
+	private FootMan footman1;
+	private FootMan footman2;
 
 	public Game() {
+		selectedList = new ArrayList<GameEntity>();
 		gameEventHandler = new ArrayList<GameEventHandler>();
-		entityList = new ArrayList<Entity>();
+		entityList = new ArrayList<GameEntity>();
 		for (int i = 0; i < MAP_SIZE; i++) {
 			for (int j = 0; j < MAP_SIZE; j++) {
 				map[i][j] = new Tile(new Vector2i(i, j));
@@ -33,28 +37,77 @@ public class Game {
 	}
 
 	public void newGame() {
-		entityList.add(EntityFactory.getInstance().getEntity(E_Entity.SOLDAT));
+		ArrayList<Tile> allo = new ArrayList<Tile>();
+		allo.add(new Tile(new Vector2i(5, 5)));
+		footman1 = new FootMan(allo);
+		entityList.add(footman1);
+		map[5][5].setOnTile(footman1);
+		
+		allo.clear();
+		allo.add(new Tile(new Vector2i(6, 7)));
+		footman2 = new FootMan(allo);
+		entityList.add(footman2);
+		map[6][7].setOnTile(footman2);
 	}
 
-	public ArrayList<Entity> getAllEntity() {
+	public ArrayList<GameEntity> getAllEntity() {
 		return entityList;
 	}
 
-	public void selectEntity(Vector2f selection1, Vector2f selection2) {
-		ArrayList<Entity> toHighlight = new ArrayList<Entity>();
+	public ArrayList<GameEntity> getAllSelected() {
+		return selectedList;
+	}
 
-		for (int i = (int) selection1.x / (int) Tile.TILE_SIZE; i < selection2.x
-				/ (int) Tile.TILE_SIZE; i++) {
-			for (int j = (int) selection1.y / (int) Tile.TILE_SIZE; j < selection2.y
-					/ (int) Tile.TILE_SIZE; j++) {
+	public void selectEntity(Vector2f selection1, Vector2f selection2) {
+		ArrayList<GameEntity> toHighlight = new ArrayList<GameEntity>();
+
+		selection1 = Vector2f.div(selection1, Tile.TILE_SIZE);
+		selection2 = Vector2f.div(selection2, Tile.TILE_SIZE);
+
+
+			if (selection1.x > selection2.x) {
+				Vector2f buffer = selection1;
+				selection1 = new Vector2f(selection2.x, selection1.y);
+				selection2 = new Vector2f(buffer.x, selection2.y);
+			}
+			if (selection1.y > selection2.y) {
+				Vector2f buffer = selection1;
+				selection1 = new Vector2f(selection1.x, selection2.y);
+				selection2 = new Vector2f(selection2.x, buffer.y);
+			}
+			
+
+		for (int i = (int) selection1.x; i < selection2.x; i++) {
+			for (int j = (int) selection1.y; j < selection2.y; j++) {
 				if (map[i][j].getOnTile() != null) {
 					toHighlight.add(map[i][j].getOnTile());
 				}
 			}
 		}
 
-		for (GameEventHandler game : gameEventHandler) {
-			game.highlightSelected(toHighlight);
+		for (GameEntity gameEntity : toHighlight) {
+			gameEntity.select();
+			selectedList.add(gameEntity);
+		}
+
+		ArrayList<GameEntity> toUnselect = new ArrayList<GameEntity>();
+		// to deselect les entity qui ne sont plus selectionner
+		for (GameEntity gameEntity : selectedList) {
+			boolean isSelected = false;
+			for (GameEntity gameEntitySelection : toHighlight) {
+				if (gameEntity == gameEntitySelection) {
+					isSelected = true;
+				}
+			}
+			if (!isSelected) {
+				gameEntity.deSelect();
+				toUnselect.add(gameEntity);
+			}
+		}
+		// pour eviter les ConcurrentModificationExceptions
+		for (GameEntity gameEntity : toUnselect) {
+			selectedList.remove(gameEntity);
 		}
 	}
+
 }
